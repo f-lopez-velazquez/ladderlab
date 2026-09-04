@@ -1,0 +1,8 @@
+# LadderLab
+
+LadderLab is an open educational web simulator for PLC Ladder Logic and industrial safety scenarios.
+
+- [Source code and documentation](https://github.com/f-lopez-velazquez/ladderlab)
+- [Project creator](https://zolvek.com.mx)
+
+The simulator must not be used to control real machinery or replace certified safety engineering.
