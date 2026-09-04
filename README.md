@@ -45,6 +45,12 @@ Las variables `.env*` están excluidas de Git. La configuración web de Firebase
 
 Analytics está desactivado deliberadamente para evitar telemetría sin consentimiento.
 
+Las reglas incluyen pruebas automatizadas de aislamiento entre usuarios. Para ejecutarlas con el emulador local:
+
+```bash
+npx firebase-tools emulators:exec --only firestore --project demo-ladderlab "npm run test:rules"
+```
+
 ## Formato portable
 
 Los archivos `.ladderlab` son JSON versionado. Al importar se limitan tamaño, número de rungs, número de instrucciones, tipos admitidos y longitud de etiquetas antes de modificar el proyecto activo.

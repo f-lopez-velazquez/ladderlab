@@ -8,7 +8,7 @@ import {
   Trash2, Upload, Wifi, X
 } from 'lucide-react';
 import {
-  createProject, downloadProject, listSnapshots, loadImmediate, loadIndexed,
+  createProject, downloadProject, listProjects, listSnapshots, loadImmediate, loadIndexed,
   readProjectFile, requestDurableStorage, saveImmediate, saveIndexed, validateProject
 } from './storage';
 import './styles.css';
@@ -66,7 +66,7 @@ function Instruction({ node, active, onRemove, onEdit }) {
   </div>;
 }
 
-function ProjectManager({ open, onClose, project, onRename, onSave, onExport, onImport, onNew, snapshots, onRestore, storageStatus, cloudStatus, onConnect, fileRef }) {
+function ProjectManager({ open, onClose, project, projects, onLoadProject, onRename, onSave, onExport, onImport, onNew, snapshots, onRestore, storageStatus, cloudStatus, onConnect, fileRef }) {
   if (!open) return null;
   return <div className="drawer-backdrop" onMouseDown={onClose}><aside className="project-drawer" onMouseDown={event => event.stopPropagation()} aria-label="Administrar proyecto">
     <div className="drawer-head"><div><span className="step">PROYECTO SEGURO</span><h2>Respaldo y recuperación</h2></div><button onClick={onClose} aria-label="Cerrar"><X size={18} /></button></div>
@@ -82,6 +82,8 @@ function ProjectManager({ open, onClose, project, onRename, onSave, onExport, on
       <button onClick={onNew}><FilePlus2 size={16} /><span><b>Proyecto nuevo</b><small>Conserva una copia del actual</small></span></button>
     </div>
     <input ref={fileRef} className="visually-hidden" type="file" accept=".ladderlab,application/json" onChange={onImport} />
+    <div className="history-title"><FolderOpen size={14} /><span>PROYECTOS DEL DISPOSITIVO</span><small>{projects.length}</small></div>
+    <div className="device-projects">{projects.map(item => <button className={item.id === project.id ? 'current' : ''} key={item.id} onClick={() => onLoadProject(item)}><span><b>{item.name}</b><small>{new Date(item.updatedAt).toLocaleString('es-MX')} · {item.rungs.length} rungs</small></span>{item.id === project.id ? <Check size={14} /> : <ChevronRight size={14} />}</button>)}</div>
     <div className="history-title"><History size={14} /><span>HISTORIAL LOCAL</span><small>{snapshots.length}/12 versiones</small></div>
     <div className="history-list">{snapshots.length === 0 && <p>Aún no hay versiones manuales. El autoguardado ya está activo.</p>}{snapshots.map(snapshot => <button key={snapshot.snapshotId} onClick={() => onRestore(snapshot)}><ArchiveRestore size={15} /><span><b>{snapshot.name}</b><small>{new Date(snapshot.updatedAt).toLocaleString('es-MX')}</small></span><ChevronRight size={14} /></button>)}</div>
     <div className="drawer-note"><LockKeyhole size={15} /><p>Los proyectos en Firebase solo pueden ser leídos o modificados por su usuario autenticado. Nunca se almacenan contraseñas en este cliente.</p></div>
@@ -147,6 +149,7 @@ function App() {
   const [showProjects, setShowProjects] = useState(false);
   const [selection, setSelection] = useState(null);
   const [snapshots, setSnapshots] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [storageStatus, setStorageStatus] = useState('saved');
   const [cloudStatus, setCloudStatus] = useState(firebaseConfigured ? 'available' : 'disabled');
   const [logs, setLogs] = useState([{ time: new Date(), type: 'ok', text: 'Sesión local protegida y lista.' }]);
@@ -176,6 +179,7 @@ function App() {
   }, [currentProject, cloudStatus]);
 
   useEffect(() => { const handlePageHide = () => { try { saveImmediate(projectRef.current); } catch { /* browser storage unavailable */ } }; window.addEventListener('pagehide', handlePageHide); return () => window.removeEventListener('pagehide', handlePageHide); }, []);
+  useEffect(() => { if (showProjects) listProjects().then(setProjects); }, [showProjects, storageStatus, projectId]);
   useEffect(() => { if (!processLive) return undefined; const timer = setInterval(() => { setElapsed(value => value + 0.06 * speed); setBoxes(previous => previous.map(position => { const next = position + 0.34 * speed; if (next > 108) { setCompleted(value => value + 1); return -18; } return next; })); }, 60); return () => clearInterval(timer); }, [processLive, speed]);
   useEffect(() => { if (sensorActive && !detectedRef.current) { detectedRef.current = true; setDetections(value => value + 1); } if (!sensorActive) detectedRef.current = false; }, [sensorActive]);
   useEffect(() => { if (unsafe && running) addLog(emergency ? 'Paro de emergencia activado: motor aislado.' : gateOpen ? 'Puerta G1 abierta: interlock activo.' : 'Atasco simulado: línea detenida.', 'alarm'); }, [unsafe]);
@@ -199,6 +203,7 @@ function App() {
   const importProject = async event => { const file = event.target.files?.[0]; event.target.value = ''; if (!file) return; try { await saveIndexed(currentProject(), true); const imported = await readProjectFile(file); setProjectId(imported.id); setProjectName(imported.name); setRungs(imported.rungs); setSelectedPractice(imported.selectedPractice); setSpeed(imported.speed); setShowProjects(false); notify('Proyecto validado e importado'); addLog(`Proyecto ${imported.name} importado.`, 'ok'); } catch (error) { notify(error instanceof SyntaxError ? 'El archivo está dañado o no es JSON válido' : error.message); } };
   const newProject = async () => { await saveIndexed(currentProject(), true).catch(() => {}); const fresh = createProject({ name: 'Proyecto sin título', selectedPractice: 0, speed: 1, rungs: [{ id: Date.now(), nodes: [] }] }); setProjectId(fresh.id); setProjectName(fresh.name); setRungs(fresh.rungs); setSelectedPractice(0); setSpeed(1); setShowProjects(false); stop(); notify('Proyecto nuevo creado; el anterior quedó respaldado'); };
   const restoreSnapshot = snapshot => { const safe = validateProject({ ...snapshot, updatedAt: Date.now() }); setProjectName(safe.name); setRungs(safe.rungs); setSelectedPractice(safe.selectedPractice); setSpeed(safe.speed); setShowProjects(false); notify('Versión restaurada'); addLog('Se restauró un punto del historial.', 'ok'); };
+  const loadSavedProject = async saved => { await saveIndexed(currentProject()).catch(() => {}); const safe = validateProject(saved); setProjectId(safe.id); setProjectName(safe.name); setRungs(safe.rungs); setSelectedPractice(safe.selectedPractice); setSpeed(safe.speed); setShowProjects(false); stop(); notify(`Proyecto abierto: ${safe.name}`); };
   const addNode = (rungIndex, item) => setRungs(previous => previous.map((rung, index) => index === rungIndex ? { ...rung, nodes: [...rung.nodes, { type: item.type, tag: item.type === 'NO' ? 'Input' : item.type === 'COIL' ? 'Output' : item.type, value: item.type === 'TON' ? '2s' : item.type === 'CTU' ? '10' : undefined }] } : rung));
   const removeNode = (ri, ni) => setRungs(previous => previous.map((rung, index) => index === ri ? { ...rung, nodes: rung.nodes.filter((_, nodeIndex) => nodeIndex !== ni) } : rung));
   const editNode = (tag, value) => { const cleanTag = tag.trim().slice(0, 40); setRungs(previous => previous.map((rung, ri) => ri === selection.rung ? { ...rung, nodes: rung.nodes.map((node, ni) => ni === selection.index ? { ...node, tag: cleanTag, ...(value.trim() ? { value: value.trim().slice(0, 16) } : {}) } : node) } : rung)); setSelection(null); notify('Instrucción actualizada'); };
@@ -220,7 +225,7 @@ function App() {
       <section className={`bottom-panel ${bottomOpen ? '' : 'collapsed'}`}><div className="bottom-tabs"><button className={bottomTab === 'terminal' ? 'active' : ''} onClick={() => setBottomTab('terminal')}>Eventos <span>{logs.length}</span></button><button className={bottomTab === 'symbols' ? 'active' : ''} onClick={() => setBottomTab('symbols')}>Símbolos <span>{variables.length}</span></button><button className={bottomTab === 'instructions' ? 'active' : ''} onClick={() => setBottomTab('instructions')}>Diagnóstico</button><button className="collapse-btn" onClick={() => setBottomOpen(value => !value)} aria-label="Contraer panel"><PanelBottomClose size={16} /></button></div>{bottomOpen && <div className="bottom-content">{bottomTab === 'symbols' && <div className="symbol-table"><div className="table-head"><span>NOMBRE</span><span>DIRECCIÓN</span><span>TIPO</span><span>VALOR</span></div>{variables.map(variable => <div className="table-row" key={variable.name}><span><i className={`tiny-dot ${variable.value === true ? 'active' : ''}`} />{variable.name}</span><code>{variable.addr}</code><span>{variable.type}</span><b>{typeof variable.value === 'boolean' ? (variable.value ? 'TRUE' : 'FALSE') : variable.value}</b></div>)}</div>}{bottomTab === 'terminal' && <div className="terminal">{logs.map((log, index) => <p className={log.type} key={`${log.time.getTime()}-${index}`}><span>[{log.time.toLocaleTimeString('es-MX')}]</span>{log.text}</p>)}</div>}{bottomTab === 'instructions' && <div className="diagnostics"><div><ShieldCheck size={20} /><span><b>Safety chain</b><small>{unsafe ? 'Interlock abierto' : 'Todos los dispositivos OK'}</small></span></div><div><Wifi size={20} /><span><b>Scan virtual</b><small>12 ms · Sin pérdida de ciclo</small></span></div><div><Save size={20} /><span><b>Persistencia</b><small>LocalStorage + IndexedDB + archivo</small></span></div></div>}</div>}</section>
     </main>
     {showPractices && <div className="modal-backdrop" onMouseDown={() => setShowPractices(false)}><div className="practice-modal" onMouseDown={event => event.stopPropagation()}><div className="modal-art"><div><span>LABORATORIO DE AUTOMATIZACIÓN</span><h2>Entrena con procesos que reaccionan</h2><p>Prueba fallos, interlocks y secuencias sin poner una máquina real en riesgo.</p></div></div><div className="modal-content"><div className="modal-head"><div><span className="step">BIBLIOTECA</span><h2>Prácticas disponibles</h2></div><button onClick={() => setShowPractices(false)}><X size={18} /></button></div><div className="practice-grid">{practices.map((practice, index) => <button key={practice.n} onClick={() => loadPractice(practice, index)}><span>{practice.n}</span><div><small>{practice.level}</small><h3>{practice.title}</h3><p>{practice.desc}</p></div><ChevronRight size={16} /></button>)}</div></div></div></div>}
-    <ProjectManager open={showProjects} onClose={() => setShowProjects(false)} project={project} onRename={setProjectName} onSave={saveVersion} onExport={() => downloadProject(currentProject())} onImport={importProject} onNew={newProject} snapshots={snapshots} onRestore={restoreSnapshot} storageStatus={storageStatus} cloudStatus={cloudStatus} onConnect={connectCloud} fileRef={fileRef} />
+    <ProjectManager open={showProjects} onClose={() => setShowProjects(false)} project={project} projects={projects} onLoadProject={loadSavedProject} onRename={setProjectName} onSave={saveVersion} onExport={() => downloadProject(currentProject())} onImport={importProject} onNew={newProject} snapshots={snapshots} onRestore={restoreSnapshot} storageStatus={storageStatus} cloudStatus={cloudStatus} onConnect={connectCloud} fileRef={fileRef} />
     <NodeEditor selection={selection} onClose={() => setSelection(null)} onApply={editNode} />{toast && <div className="toast"><span className="status-dot" />{toast}</div>}
   </div>;
 }

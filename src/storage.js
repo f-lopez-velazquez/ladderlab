@@ -110,6 +110,13 @@ export async function loadIndexed(projectId) {
   try { return await transact('projects', 'readonly', store => store.get(projectId)); } catch { return null; }
 }
 
+export async function listProjects() {
+  try {
+    const projects = await transact('projects', 'readonly', store => store.getAll());
+    return projects.map(validateProject).sort((a, b) => b.updatedAt - a.updatedAt);
+  } catch { return []; }
+}
+
 export async function listSnapshots(projectId) {
   try {
     const snapshots = await transact('snapshots', 'readonly', store => store.index('projectId').getAll(projectId));
