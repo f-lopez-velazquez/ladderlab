@@ -11,14 +11,14 @@
     "test:rules": "node --test tests/firestore.rules.test.mjs"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "latest",
-    "firebase": "^12.18.0",
-    "lucide-react": "latest",
-    "react": "latest",
-    "react-dom": "latest",
-    "vite": "latest"
+    "firebase": "12.18.0",
+    "lucide-react": "1.40.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@firebase/rules-unit-testing": "^5.0.2"
+    "@firebase/rules-unit-testing": "5.0.2",
+    "@vitejs/plugin-react": "6.1.1",
+    "vite": "8.2.2"
   }
 }
