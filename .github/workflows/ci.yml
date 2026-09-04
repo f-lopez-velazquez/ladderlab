@@ -19,6 +19,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --audit=false
+      - run: npm test
       - name: Audit dependencies
         shell: bash
         run: |

@@ -1,7 +1,7 @@
 {
-  "name": "LadderLab — Simulador PLC",
+  "name": "LadderLab — Automatización y electrónica",
   "short_name": "LadderLab",
-  "description": "Prácticas de Ladder Logic con simulación industrial y recuperación segura.",
+  "description": "Prácticas de Ladder Logic y simulación de circuitos electrónicos en el navegador.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#071523",

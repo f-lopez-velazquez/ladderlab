@@ -1,7 +1,7 @@
 import React, { Component, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
-  Activity, AlertTriangle, ArchiveRestore, BookOpen, Box, Check, ChevronDown,
+  Activity, AlertTriangle, ArchiveRestore, BookOpen, Box, Check, ChevronDown, CircuitBoard,
   ChevronRight, CircleStop, Cloud, CloudOff, Download, FilePlus2, FolderOpen,
   Gauge, History, Layers3, ListTree, LockKeyhole, Menu, PanelBottomClose, Pause,
   Play, Plus, RefreshCcw, Save, Search, Settings2, ShieldCheck,
@@ -11,6 +11,7 @@ import {
   createProject, downloadProject, listProjects, listSnapshots, loadImmediate, loadIndexed,
   readProjectFile, requestDurableStorage, saveImmediate, saveIndexed, validateProject
 } from './storage';
+import GeneralLab from './GeneralLab';
 import './styles.css';
 
 const firebaseConfigured = Boolean(import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_PROJECT_ID && import.meta.env.VITE_FIREBASE_APP_ID);
@@ -124,7 +125,7 @@ function Simulation({ processLive, paused, emergency, gateOpen, jam, speed, boxe
   </aside>;
 }
 
-function App() {
+function LadderApp({ onOpenGeneral }) {
   const initial = useMemo(() => loadImmediate(fallbackProject), []);
   const [projectId, setProjectId] = useState(initial.id);
   const [projectName, setProjectName] = useState(initial.name);
@@ -217,7 +218,7 @@ function App() {
   const project = currentProject(projectRef.current.updatedAt || Date.now());
 
   return <div className="app-shell">
-    <header className="topbar"><div className="brand"><span className="brand-mark"><ListTree size={19} /></span><span>LADDER<b>LAB</b></span></div><button className="mobile-menu" onClick={() => setMobileNav(value => !value)} aria-label="Abrir navegación"><Menu size={19} /></button><div className="project-control"><span className="eyebrow">PROYECTO</span><button onClick={() => setShowProjects(true)}>{projectName}<ChevronDown size={14} /></button></div><button className="icon-btn save-btn" onClick={saveVersion} title="Guardar versión"><Save size={18} /></button><nav className="workspace-tabs" aria-label="Vistas"><button className={activeTab === 'editor' ? 'active' : ''} onClick={() => setActiveTab('editor')}><ListTree size={15} />Editor</button><button className={activeTab === 'simulation' ? 'active' : ''} onClick={() => setActiveTab('simulation')}><Activity size={15} />Simulación</button></nav><div className="run-controls"><button className={`run ${processLive ? 'active' : ''}`} onClick={run}><Play size={15} fill="currentColor" />Ejecutar</button><button className={paused ? 'active-pause' : ''} onClick={() => running && setPaused(value => !value)} title="Pausar"><Pause size={16} /></button><button onClick={stop} title="Detener"><CircleStop size={16} /></button></div><button className={`cloud-indicator ${cloudStatus}`} onClick={() => setShowProjects(true)} title="Estado del respaldo"><span className="status-dot" />{cloudStatus === 'ready' ? 'Nube privada' : 'Guardado local'}<small>{storageStatus === 'saving' ? 'guardando…' : 'protegido'}</small></button><button className="user-avatar" aria-label="Perfil">ZK</button></header>
+    <header className="topbar"><div className="brand"><span className="brand-mark"><ListTree size={19} /></span><span>LADDER<b>LAB</b></span></div><nav className="module-switch" aria-label="Áreas del laboratorio"><button className="active"><Layers3 size={14} />Ladder</button><button onClick={onOpenGeneral}><CircuitBoard size={14} />General</button></nav><button className="mobile-menu" onClick={() => setMobileNav(value => !value)} aria-label="Abrir navegación"><Menu size={19} /></button><div className="project-control"><span className="eyebrow">PROYECTO</span><button onClick={() => setShowProjects(true)}>{projectName}<ChevronDown size={14} /></button></div><button className="icon-btn save-btn" onClick={saveVersion} title="Guardar versión"><Save size={18} /></button><nav className="workspace-tabs" aria-label="Vistas"><button className={activeTab === 'editor' ? 'active' : ''} onClick={() => setActiveTab('editor')}><ListTree size={15} />Editor</button><button className={activeTab === 'simulation' ? 'active' : ''} onClick={() => setActiveTab('simulation')}><Activity size={15} />Simulación</button></nav><div className="run-controls"><button className={`run ${processLive ? 'active' : ''}`} onClick={run}><Play size={15} fill="currentColor" />Ejecutar</button><button className={paused ? 'active-pause' : ''} onClick={() => running && setPaused(value => !value)} title="Pausar"><Pause size={16} /></button><button onClick={stop} title="Detener"><CircleStop size={16} /></button></div><button className={`cloud-indicator ${cloudStatus}`} onClick={() => setShowProjects(true)} title="Estado del respaldo"><span className="status-dot" />{cloudStatus === 'ready' ? 'Nube privada' : 'Guardado local'}<small>{storageStatus === 'saving' ? 'guardando…' : 'protegido'}</small></button><button className="user-avatar" aria-label="Perfil">ZK</button></header>
     <aside className={`sidebar ${mobileNav ? 'open' : ''}`}><div className="sidebar-heading"><span>EXPLORADOR</span><button onClick={() => setMobileNav(false)} aria-label="Cerrar navegación"><X size={16} /></button></div><button className="search"><Search size={15} /><span>Buscar práctica...</span><kbd>⌘K</kbd></button><button className="library" onClick={() => setShowProjects(true)}><FolderOpen size={16} />Mis proyectos <span>LOCAL</span></button><div className="section-label"><span>PRÁCTICAS</span><button onClick={() => setShowPractices(true)}>VER TODAS</button></div><div className="practice-list">{practices.map((practice, index) => <button key={practice.n} className={selectedPractice === index ? 'selected' : ''} onClick={() => loadPractice(practice, index)}><span className="practice-no">{practice.n}</span><span><b>{practice.title}</b><small>{practice.level}</small></span>{selectedPractice === index && <ChevronRight size={15} />}</button>)}</div><div className="system-health"><div><ShieldCheck size={15} /><span>PROTECCIÓN DE SESIÓN</span></div><ul><li><i />Autoguardado inmediato</li><li><i />Historial recuperable</li><li><i />Validación de archivos</li></ul></div><div className="sidebar-footer"><button onClick={() => setShowPractices(true)}><BookOpen size={15} />Guía de prácticas</button><a href="https://zolvek.com.mx" target="_blank" rel="noreferrer">Creado por zolvek.com.mx</a></div></aside>
     <main className="workspace">
       <section className={`editor-pane ${activeTab === 'simulation' ? 'mobile-hidden' : ''}`}><div className="pane-header"><div><span className="step">PRÁCTICA {String(selectedPractice + 1).padStart(2, '0')} · IEC 61131-3</span><h1>{projectName}</h1><p>Programa, prueba interlocks y observa el ciclo en tiempo real.</p></div><button className={`save-state ${storageStatus}`} onClick={() => setShowProjects(true)}><span className="status-dot" />{storageStatus === 'saving' ? 'Guardando cambios…' : 'Cambios protegidos'}</button></div><div className="editor-toolbar"><div className="palette-title"><Layers3 size={15} />INSTRUCCIONES</div><div className="palette-scroll">{palette.map(item => <button key={item.type} draggable onClick={() => addNode(rungs.length - 1, item)} onDragStart={event => event.dataTransfer.setData('application/json', JSON.stringify(item))} title={`Arrastrar o pulsar: ${item.label}`} aria-label={`Agregar ${item.label}`}><span>{item.symbol}</span><small>{item.type}</small></button>)}</div><button className="toolbar-icon" onClick={clearProgram} title="Limpiar programa"><Trash2 size={15} /></button></div><div className="ladder-canvas"><div className="rail left-rail" /><div className="rail right-rail" />{rungs.map((rung, ri) => <div className={`rung ${processLive && ri <= timerValue ? 'rung-live' : ''}`} key={rung.id} onDragOver={event => { event.preventDefault(); event.currentTarget.classList.add('drag-over'); }} onDragLeave={event => event.currentTarget.classList.remove('drag-over')} onDrop={event => { event.preventDefault(); event.currentTarget.classList.remove('drag-over'); try { addNode(ri, JSON.parse(event.dataTransfer.getData('application/json'))); } catch { notify('La instrucción arrastrada no es válida'); } }}><span className="rung-no">{String(ri + 1).padStart(3, '0')}</span><div className="nodes">{rung.nodes.map((node, ni) => <Instruction key={`${node.tag}-${ni}`} node={node} active={processLive && (node.tag !== 'Sensor_1' || sensorActive)} onRemove={() => removeNode(ri, ni)} onEdit={() => setSelection({ rung: ri, index: ni, node })} />)}{!rung.nodes.length && <span className="drop-hint">Arrastra una instrucción aquí</span>}</div></div>)}<button className="add-rung" onClick={() => setRungs(previous => [...previous, { id: Date.now(), nodes: [] }])}><Plus size={15} />Agregar rung</button></div></section>
@@ -228,6 +229,26 @@ function App() {
     <ProjectManager open={showProjects} onClose={() => setShowProjects(false)} project={project} projects={projects} onLoadProject={loadSavedProject} onRename={setProjectName} onSave={saveVersion} onExport={() => downloadProject(currentProject())} onImport={importProject} onNew={newProject} snapshots={snapshots} onRestore={restoreSnapshot} storageStatus={storageStatus} cloudStatus={cloudStatus} onConnect={connectCloud} fileRef={fileRef} />
     <NodeEditor selection={selection} onClose={() => setSelection(null)} onApply={editNode} />{toast && <div className="toast"><span className="status-dot" />{toast}</div>}
   </div>;
+}
+
+function App() {
+  const [module, setModule] = useState(() => {
+    if (location.hash === '#general') return 'general';
+    try { return sessionStorage.getItem('ladderlab.active-module') === 'general' ? 'general' : 'ladder'; } catch { return 'ladder'; }
+  });
+  const openModule = next => {
+    setModule(next);
+    history.replaceState(null, '', next === 'general' ? '#general' : `${location.pathname}${location.search}`);
+    try { sessionStorage.setItem('ladderlab.active-module', next); } catch { /* Session storage can be disabled. */ }
+  };
+  useEffect(() => {
+    const handleHash = () => setModule(location.hash === '#general' ? 'general' : 'ladder');
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, []);
+  return module === 'general'
+    ? <GeneralLab onOpenLadder={() => openModule('ladder')} />
+    : <LadderApp onOpenGeneral={() => openModule('general')} />;
 }
 
 if ('serviceWorker' in navigator && import.meta.env.PROD) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}), { once: true });

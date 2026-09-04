@@ -1,6 +1,9 @@
 # LadderLab
 
-LadderLab is an open educational web simulator for PLC Ladder Logic and industrial safety scenarios.
+LadderLab is an open educational web laboratory with two areas: PLC Ladder Logic and a browser-native DC electronics workbench.
+
+- Ladder: visual IEC 61131-3 editor, conveyor simulation and industrial safety scenarios.
+- General: component placement, terminal wiring, DC network solving, instruments and oscilloscope.
 
 - [Source code and documentation](https://github.com/f-lopez-velazquez/ladderlab)
 - [Project creator](https://zolvek.com.mx)

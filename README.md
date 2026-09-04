@@ -1,10 +1,10 @@
 # LadderLab
 
-Laboratorio web abierto para aprender y practicar programación PLC en Ladder Logic con un gemelo digital de una línea transportadora.
+Laboratorio web abierto para aprender automatización y electrónica directamente desde el navegador.
 
 **Aplicación pública:** [ladderbasic.web.app](https://ladderbasic.web.app)
 
-## Funciones principales
+## Apartado Ladder
 
 - Editor visual de contactos, bobinas, SET/RESET, temporizadores y contadores.
 - Simulación continua con banda, cajas, sensores, desviador y velocidad variable.
@@ -14,6 +14,18 @@ Laboratorio web abierto para aprender y practicar programación PLC en Ladder Lo
 - Importación y exportación validada en formato `.ladderlab`.
 - Caché offline mediante Service Worker.
 - Sincronización opcional con Firebase, aislada por usuario autenticado.
+
+## Apartado General
+
+- Banco de electrónica inspirado en el flujo sencillo de SimulIDE, implementado desde cero para la web.
+- Biblioteca con fuentes DC, tierra, resistencias, capacitores, interruptores, pulsadores, LED, lámparas y medidores.
+- Colocación y movimiento de componentes mediante clic o arrastre.
+- Cableado visual entre terminales y eliminación segura de conexiones.
+- Resolución de redes DC en tiempo real, con lecturas de voltaje y corriente.
+- Osciloscopio, interruptores interactivos y protección didáctica contra cortocircuitos.
+- Autoguardado en `localStorage` e IndexedDB, copia de recuperación y archivos `.circuitlab` validados.
+
+El apartado General es una implementación independiente: no incluye ni redistribuye código de SimulIDE. Consulta [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 > LadderLab es una herramienta educativa. No debe controlar maquinaria real ni sustituir un PLC, relé de seguridad o análisis de riesgos certificado.
 
@@ -55,7 +67,7 @@ npx firebase-tools emulators:exec --only firestore --project demo-ladderlab "npm
 
 ## Formato portable
 
-Los archivos `.ladderlab` son JSON versionado. Al importar se limitan tamaño, número de rungs, número de instrucciones, tipos admitidos y longitud de etiquetas antes de modificar el proyecto activo.
+Los archivos `.ladderlab` y `.circuitlab` son JSON versionado. Al importar se limitan tamaño, cantidad de elementos, tipos admitidos, terminales y longitud de etiquetas antes de modificar el proyecto activo.
 
 ## Seguridad
 

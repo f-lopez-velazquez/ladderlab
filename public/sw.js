@@ -1,4 +1,4 @@
-const CACHE = 'ladderlab-shell-v2';
+const CACHE = 'ladderlab-shell-v3';
 const CORE = ['/', '/index.html', '/industrial-cell.png'];
 
 self.addEventListener('install', event => {

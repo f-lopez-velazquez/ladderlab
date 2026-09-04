@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "audit": "npm audit --audit-level=moderate",
+    "test": "node --test tests/*.unit.test.mjs",
     "test:rules": "node --test tests/firestore.rules.test.mjs"
   },
   "dependencies": {
