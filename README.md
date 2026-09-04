@@ -18,10 +18,11 @@ Laboratorio web abierto para aprender automatización y electrónica directament
 ## Apartado General
 
 - Banco de electrónica inspirado en el flujo sencillo de SimulIDE, implementado desde cero para la web.
-- Biblioteca con fuentes DC, tierra, resistencias, capacitores, interruptores, pulsadores, LED, lámparas y medidores.
+- Biblioteca técnica con 20 dispositivos: fuentes DC/AC, pasivos, sensores, controles, semiconductores, cargas y medidores.
 - Colocación y movimiento de componentes mediante clic o arrastre.
-- Cableado visual entre terminales y eliminación segura de conexiones.
-- Resolución de redes DC en tiempo real, con lecturas de voltaje y corriente.
+- Símbolos esquemáticos SVG, rotación real y cableado ortogonal con puntos de unión, animación y colores editables.
+- Zoom, ajuste al área, rejilla configurable, imán a cuadrícula, duplicado y deshacer/rehacer de 60 pasos.
+- Resolución de redes DC y fuente AC didáctica en tiempo real, con lecturas de voltaje y corriente.
 - Osciloscopio, interruptores interactivos y protección didáctica contra cortocircuitos.
 - Autoguardado en `localStorage` e IndexedDB, copia de recuperación y archivos `.circuitlab` validados.
 

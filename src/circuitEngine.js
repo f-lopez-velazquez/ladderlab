@@ -1,11 +1,21 @@
 export const componentTerminals = {
   dc: ['p', 'n'],
+  ac: ['p', 'n'],
   resistor: ['a', 'b'],
+  potentiometer: ['a', 'b'],
+  ldr: ['a', 'b'],
+  thermistor: ['a', 'b'],
+  fuse: ['a', 'b'],
+  diode: ['a', 'k'],
+  zener: ['a', 'k'],
   switch: ['a', 'b'],
   button: ['a', 'b'],
   led: ['a', 'k'],
   lamp: ['a', 'b'],
+  motor: ['a', 'b'],
+  buzzer: ['a', 'b'],
   capacitor: ['a', 'b'],
+  inductor: ['a', 'b'],
   voltmeter: ['p', 'n'],
   ammeter: ['a', 'b'],
   ground: ['g'],
@@ -55,13 +65,22 @@ function solveLinear(matrix, vector) {
 const resistanceFor = component => {
   switch (component.type) {
     case 'resistor': return Math.max(0.01, component.value || 1000);
+    case 'potentiometer': return Math.max(0.01, component.value || 10000);
+    case 'ldr': return Math.max(0.01, component.value || 5000);
+    case 'thermistor': return Math.max(0.01, component.value || 10000);
+    case 'fuse': return component.state === false ? Infinity : 0.03;
+    case 'diode':
+    case 'zener': return Math.max(40, component.value || 80);
     case 'switch': return component.state ? 0.05 : Infinity;
     case 'button': return component.state ? 0.05 : Infinity;
     case 'led': return Math.max(80, component.value || 120);
     case 'lamp': return Math.max(1, component.value || 120);
+    case 'motor': return Math.max(1, component.value || 90);
+    case 'buzzer': return Math.max(1, component.value || 220);
     case 'voltmeter': return 1e9;
     case 'ammeter': return 0.02;
     case 'capacitor': return 1e12;
+    case 'inductor': return 0.2;
     default: return Infinity;
   }
 };
@@ -70,7 +89,7 @@ export function solveCircuit(components, wires, powered) {
   const keys = components.flatMap(component => (componentTerminals[component.type] || []).map(terminal => terminalKey(component.id, terminal)));
   const union = new UnionFind(keys);
   wires.forEach(wire => union.union(terminalKey(wire.from.componentId, wire.from.terminal), terminalKey(wire.to.componentId, wire.to.terminal)));
-  const sources = components.filter(component => component.type === 'dc');
+  const sources = components.filter(component => component.type === 'dc' || component.type === 'ac');
   const ground = components.find(component => component.type === 'ground');
   const referenceRoot = ground
     ? union.find(terminalKey(ground.id, 'g'))
@@ -96,7 +115,7 @@ export function solveCircuit(components, wires, powered) {
   };
 
   components.forEach(component => {
-    if (component.type !== 'dc' && component.type !== 'ground') {
+    if (!['dc', 'ac', 'ground'].includes(component.type)) {
       const terminals = componentTerminals[component.type];
       stampConductance(component, terminals[0], terminals[1], resistanceFor(component));
     }
@@ -108,7 +127,9 @@ export function solveCircuit(components, wires, powered) {
     const negative = indexFor(source, 'n');
     if (positive !== undefined) { matrix[positive][row] += 1; matrix[row][positive] += 1; }
     if (negative !== undefined) { matrix[negative][row] -= 1; matrix[row][negative] -= 1; }
-    vector[row] = powered ? Math.max(0, source.value || 0) : 0;
+    vector[row] = powered
+      ? source.type === 'ac' ? (source.value || 0) : Math.max(0, source.value || 0)
+      : 0;
   });
 
   voltageRoots.forEach((_, index) => { matrix[index][index] += 1e-10; });
@@ -123,11 +144,13 @@ export function solveCircuit(components, wires, powered) {
     const voltage = terminals.length > 1 ? voltageAt(component, terminals[0]) - voltageAt(component, terminals[1]) : voltageAt(component, terminals[0]);
     const resistance = resistanceFor(component);
     let current = Number.isFinite(resistance) ? voltage / resistance : 0;
-    if (component.type === 'dc') current = -(solution[voltageRoots.length + sources.indexOf(component)] || 0);
+    if (component.type === 'dc' || component.type === 'ac') current = -(solution[voltageRoots.length + sources.indexOf(component)] || 0);
     const brightness = component.type === 'led'
       ? Math.max(0, Math.min(1, (voltage - 1.4) / 1.6))
       : component.type === 'lamp'
         ? Math.max(0, Math.min(1, Math.abs(voltage * current) / 0.6))
+        : ['motor', 'buzzer'].includes(component.type)
+          ? Math.max(0, Math.min(1, Math.abs(voltage * current) / 0.35))
         : 0;
     readings.set(component.id, { voltage, current, brightness, index });
   });

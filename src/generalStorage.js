@@ -6,13 +6,22 @@ const STORAGE_KEY = 'ladderlab.general.current.v1';
 const BACKUP_KEY = 'ladderlab.general.backup.v1';
 const DB_NAME = 'ladderlab-general-store';
 const DB_VERSION = 1;
-const ALLOWED_TYPES = new Set(['dc', 'resistor', 'switch', 'button', 'led', 'lamp', 'capacitor', 'voltmeter', 'ammeter', 'ground']);
+const ALLOWED_TYPES = new Set([
+  'dc', 'ac', 'resistor', 'potentiometer', 'ldr', 'thermistor', 'fuse', 'diode', 'zener',
+  'switch', 'button', 'led', 'lamp', 'motor', 'buzzer', 'capacitor', 'inductor',
+  'voltmeter', 'ammeter', 'ground',
+]);
 const ALLOWED_TERMINALS = {
-  dc: new Set(['p', 'n']), resistor: new Set(['a', 'b']), switch: new Set(['a', 'b']),
-  button: new Set(['a', 'b']), led: new Set(['a', 'k']), lamp: new Set(['a', 'b']),
-  capacitor: new Set(['a', 'b']), voltmeter: new Set(['p', 'n']), ammeter: new Set(['a', 'b']),
+  dc: new Set(['p', 'n']), ac: new Set(['p', 'n']), resistor: new Set(['a', 'b']),
+  potentiometer: new Set(['a', 'b']), ldr: new Set(['a', 'b']), thermistor: new Set(['a', 'b']),
+  fuse: new Set(['a', 'b']), diode: new Set(['a', 'k']), zener: new Set(['a', 'k']),
+  switch: new Set(['a', 'b']), button: new Set(['a', 'b']), led: new Set(['a', 'k']),
+  lamp: new Set(['a', 'b']), motor: new Set(['a', 'b']), buzzer: new Set(['a', 'b']),
+  capacitor: new Set(['a', 'b']), inductor: new Set(['a', 'b']),
+  voltmeter: new Set(['p', 'n']), ammeter: new Set(['a', 'b']),
   ground: new Set(['g']),
 };
+const ALLOWED_WIRE_COLORS = new Set(['green', 'red', 'blue', 'black', 'orange', 'purple']);
 const MAX_COMPONENTS = 200;
 const MAX_WIRES = 500;
 
@@ -76,8 +85,8 @@ export function validateGeneralProject(input) {
       type: component.type,
       label: cleanText(component.label || component.type.toUpperCase(), 32),
       value: finite(component.value, 0, 0, 1_000_000_000),
-      x: finite(component.x, 80, 0, 920),
-      y: finite(component.y, 80, 0, 520),
+      x: finite(component.x, 80, 0, 1080),
+      y: finite(component.y, 80, 0, 620),
       rotation: finite(component.rotation, 0, 0, 270),
       state: Boolean(component.state),
     };
@@ -97,7 +106,12 @@ export function validateGeneralProject(input) {
     const id = cleanText(wire.id, 80) || `wire-${Date.now()}-${index}`;
     if (wireIds.has(id)) throw new Error('El circuito contiene cables duplicados.');
     wireIds.add(id);
-    return { id, from: { componentId: fromId, terminal: fromTerminal }, to: { componentId: toId, terminal: toTerminal } };
+    return {
+      id,
+      from: { componentId: fromId, terminal: fromTerminal },
+      to: { componentId: toId, terminal: toTerminal },
+      color: ALLOWED_WIRE_COLORS.has(wire.color) ? wire.color : 'green',
+    };
   });
 
   return createGeneralProject({ ...input, components, wires });
