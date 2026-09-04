@@ -2,6 +2,8 @@
 
 Laboratorio web abierto para aprender y practicar programación PLC en Ladder Logic con un gemelo digital de una línea transportadora.
 
+**Aplicación pública:** [ladderbasic.web.app](https://ladderbasic.web.app)
+
 ## Funciones principales
 
 - Editor visual de contactos, bobinas, SET/RESET, temporizadores y contadores.
@@ -38,7 +40,7 @@ La aplicación funciona sin Firebase. En ese modo conserva los proyectos únicam
 
 ```bash
 npm run build
-npx firebase-tools deploy --only firestore:rules,hosting
+npx firebase-tools deploy --only auth,firestore:rules,hosting
 ```
 
 Las variables `.env*` están excluidas de Git. La configuración web de Firebase no sustituye las reglas: `firestore.rules` niega todo por defecto y limita cada proyecto a su UID autenticado.
