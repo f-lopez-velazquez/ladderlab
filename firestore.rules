@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedInAs(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function validProject() {
+      return request.resource.data.keys().hasOnly([
+        'format', 'version', 'id', 'name', 'selectedPractice', 'speed',
+        'rungs', 'updatedAt', 'serverUpdatedAt'
+      ])
+      && request.resource.data.format == 'ladderlab-project'
+      && request.resource.data.version is int
+      && request.resource.data.id is string
+      && request.resource.data.id.size() <= 80
+      && request.resource.data.name is string
+      && request.resource.data.name.size() <= 72
+      && request.resource.data.selectedPractice is int
+      && request.resource.data.selectedPractice >= 0
+      && request.resource.data.selectedPractice <= 3
+      && request.resource.data.speed is number
+      && request.resource.data.speed >= 0.5
+      && request.resource.data.speed <= 2
+      && request.resource.data.rungs is list
+      && request.resource.data.rungs.size() <= 100
+      && request.resource.data.updatedAt is int
+      && request.resource.data.serverUpdatedAt == request.time;
+    }
+
+    match /users/{userId}/projects/{projectId} {
+      allow read, delete: if signedInAs(userId);
+      allow create, update: if signedInAs(userId)
+        && projectId == request.resource.data.id
+        && validProject();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "name": "LadderLab — Simulador PLC",
+  "short_name": "LadderLab",
+  "description": "Prácticas de Ladder Logic con simulación industrial y recuperación segura.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#071523",
+  "theme_color": "#071523",
+  "icons": [
+    { "src": "/industrial-cell.png", "sizes": "1717x916", "type": "image/png", "purpose": "any" }
+  ]
+}
