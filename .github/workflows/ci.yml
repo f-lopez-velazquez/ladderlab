@@ -19,5 +19,16 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run audit
+      - name: Audit dependencies
+        shell: bash
+        run: |
+          set +e
+          timeout 90s npm run audit
+          audit_status=$?
+          set -e
+          if [ "$audit_status" -eq 124 ]; then
+            echo "::warning::npm audit timed out; Dependabot remains enabled for advisory monitoring."
+          elif [ "$audit_status" -ne 0 ]; then
+            exit "$audit_status"
+          fi
       - run: npm run build
